@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 
 ####
 # Define global variables dict, used in functions as default values.
@@ -360,8 +360,8 @@ def print_agent(
     Returns:
         str: The XML representation of the agent.
     """
+    from .modules import print_log_module, print_module
     from .output import print_stdout
-    from .modules import print_module, print_log_module
 
     xml = ""
     data_file = None

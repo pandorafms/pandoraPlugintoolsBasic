@@ -1,4 +1,6 @@
+LICENSE
 README.md
+setup.cfg
 setup.py
 pandoraPlugintools/__init__.py
 pandoraPlugintools/agents.py

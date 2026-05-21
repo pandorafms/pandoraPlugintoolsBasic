@@ -1,5 +1,5 @@
-import sys
 import json
+import sys
 
 ####
 # Define some global variables
@@ -14,10 +14,8 @@ _MONITORING_DATA = []
 # Internal: Alias for output.print_debug function
 #########################################################################################
 
-def _print_debug(
-        var = "",
-        print_errors: bool = False
-    ):
+
+def _print_debug(var="", print_errors: bool = False):
     """
     Print the variable as a JSON-like representation for debugging purposes.
 
@@ -26,14 +24,14 @@ def _print_debug(
         print_errors (bool): A flag indicating whether to print errors during debugging.
     """
     from .output import print_debug
+
     print_debug(var, print_errors)
+
 
 ####
 # Set error level to value
 #########################################################################################
-def set_disco_error_level(
-        value: int = 0
-    )-> None:
+def set_disco_error_level(value: int = 0) -> None:
     """
     Sets the error level to the specified value.
 
@@ -44,17 +42,16 @@ def set_disco_error_level(
 
     _ERROR_LEVEL = value
 
+
 ####
 # Set fixed value to summary dict
 #########################################################################################
-def set_disco_summary(
-        data: dict = {}
-    )-> None:
+def set_disco_summary(data: dict = {}) -> None:
     """
     Sets the disk summary data in the internal summary dictionary.
 
     This function updates the summary dictionary with the provided disk summary data.
-    
+
     Args:
         data (dict): A dictionary containing disk summary data.
 
@@ -65,13 +62,11 @@ def set_disco_summary(
 
     _SUMMARY = {}
 
+
 ####
 # Set fixed value to summary key
 #########################################################################################
-def set_disco_summary_value(
-        key: str = "",
-        value = None
-    )-> None:
+def set_disco_summary_value(key: str = "", value=None) -> None:
     """
     Sets a fixed value for a key in the '_SUMMARY' dictionary.
 
@@ -86,13 +81,11 @@ def set_disco_summary_value(
 
     _SUMMARY[key] = value
 
+
 ####
 # Add value to summary key
 #########################################################################################
-def add_disco_summary_value(
-        key: str = "",
-        value = None
-    )-> None:
+def add_disco_summary_value(key: str = "", value=None) -> None:
     """
     Adds a value to a key in the 'SUMMARY' dictionary.
 
@@ -112,12 +105,11 @@ def add_disco_summary_value(
     else:
         set_disco_summary_value(key, value)
 
+
 ####
 # Set fixed value to info
 #########################################################################################
-def set_disco_info_value(
-        value: str = ""
-    )-> None:
+def set_disco_info_value(value: str = "") -> None:
     """
     Sets a fixed value to the '_INFO' variable.
 
@@ -131,18 +123,17 @@ def set_disco_info_value(
 
     _INFO = value
 
+
 ####
 # Add data to info
 #########################################################################################
-def add_disco_info_value(
-        value: str = ""
-    )-> None:
+def add_disco_info_value(value: str = "") -> None:
     """
     Adds data to the '_INFO' variable.
 
     Args:
         data (str, optional): The data to add to the '_INFO' variable. Default is an empty string.
-    
+
     Returns:
         None
     """
@@ -150,12 +141,11 @@ def add_disco_info_value(
 
     _INFO += value
 
+
 ####
 # Set fixed value to monitoring data
 #########################################################################################
-def set_disco_monitoring_data(
-        data: list = []
-    )-> None:
+def set_disco_monitoring_data(data: list = []) -> None:
     """
     Set the monitoring data for disk usage.
 
@@ -169,12 +159,11 @@ def set_disco_monitoring_data(
 
     _MONITORING_DATA = data
 
+
 ####
 # Add value to monitoring data
 #########################################################################################
-def add_disco_monitoring_data(
-        data: dict = {}
-    )-> None:
+def add_disco_monitoring_data(data: dict = {}) -> None:
     """
     Add disk monitoring data to the global monitoring dataset.
 
@@ -188,10 +177,11 @@ def add_disco_monitoring_data(
 
     _MONITORING_DATA.append(data)
 
+
 ####
 # Print JSON output and exit script
 #########################################################################################
-def disco_output()-> None:
+def disco_output() -> None:
     """
     Prints the JSON output and exits the script.
 
@@ -209,7 +199,7 @@ def disco_output()-> None:
     global _INFO
     global _MONITORING_DATA
 
-    output={}
+    output = {}
     if _SUMMARY:
         output["summary"] = _SUMMARY
 
@@ -218,7 +208,7 @@ def disco_output()-> None:
 
     if _MONITORING_DATA:
         output["monitoring_data"] = _MONITORING_DATA
-    
+
     json_string = json.dumps(output)
 
     print_stdout(json_string)

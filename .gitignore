@@ -1,0 +1,6 @@
+venv
+dist
+build
+*egg*
+__pycache__
+test.*
