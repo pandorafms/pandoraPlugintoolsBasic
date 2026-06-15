@@ -328,6 +328,7 @@ def init_agent(default_values: dict = {}) -> dict:
         "group": _GLOBAL_VARIABLES["agents_group_name"],
         "interval": _GLOBAL_VARIABLES["interval"],
         "agent_mode": "1",
+        "extra_data": None,
     }
 
     for key, value in default_values.items():
