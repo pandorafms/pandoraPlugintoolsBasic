@@ -347,6 +347,7 @@ def print_agent(
     log_modules: list = [],
     log_encoding: str = False,
     print_flag: bool = False,
+    image_modules: list = []
 ) -> str:
     """
     Print the XML representation of an agent.
@@ -355,6 +356,7 @@ def print_agent(
         agent (dict): A dictionary containing agent configuration.
         modules (list): A list of dictionaries representing modules.
         log_modules (list): A list of dictionaries representing log modules.
+        image_modules (list): A list of dictionaries representing image modules.
         log_encoding (str): The encoding format used when printing log modules
         print_flag (bool): A flag indicating whether to print the XML representation.
 
