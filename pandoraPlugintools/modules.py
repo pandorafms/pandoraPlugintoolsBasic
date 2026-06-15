@@ -346,3 +346,46 @@ def print_log_module(
 
     return module_xml
 
+####
+# Returns img module in XML format.  
+#########################################################################################
+def print_img_module(
+        module: dict = None,
+        print_flag: bool = False,
+    ) -> str:
+    """
+    Returns image module in XML format. Accepts only {dict}.
+
+    - Only works with one module at a time: otherwise iteration is needed.
+    - The module "value" field must contain a base64-encoded image string.
+    - The function automatically prefixes the value with a valid data URI schema for PNG images.
+    - Use print_flag to optionally output the generated XML.
+
+    Args:
+        module (dict, optional): Dictionary representing the image module. Expected keys:
+                                 - source (optional, if used by print_module)
+                                 - value (base64 image string)
+        print_flag (bool, optional): Flag indicating whether to print the XML. Defaults to False.
+
+    Returns:
+        str: XML representation of the image module with embedded base64 data URI.
+    """
+    from .output import print_stdout
+
+    if module is None:
+        return ""
+
+    data = dict(module)
+
+    if "value" in data:
+        data["value"] = f"data:image/png;base64,{data['value']}"
+
+    module_xml = print_module(
+        module=data,
+        print_flag=False
+    )
+
+    if print_flag:
+        print_stdout(module_xml)
+
+    return module_xml

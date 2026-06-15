@@ -360,7 +360,7 @@ def print_agent(
     Returns:
         str: The XML representation of the agent.
     """
-    from .modules import print_log_module, print_module
+    from .modules import print_log_module, print_module, print_img_module
     from .output import print_stdout
 
     xml = ""
@@ -382,6 +382,9 @@ def print_agent(
         for log_module in log_modules:
             modules_xml = print_log_module(log_module, encoding=log_encoding)
             xml += str(modules_xml)
+
+        for image_module in image_modules:
+            xml += str(print_img_module(image_module))
 
         xml += "</agent_data>"
 
