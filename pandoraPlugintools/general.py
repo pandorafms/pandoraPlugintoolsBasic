@@ -315,13 +315,13 @@ def _print_debug(var="", print_errors: bool = False):
 #########################################################################################
 def safe_input(input_string: str = "") -> str:
     """
-    Convert an input string encoded in HTML entities to a clear character string.
+    Convert special characters in an input string to their corresponding HTML entities.
 
     Args:
-        input_string (str): The input string encoded in HTML entities.
+        input_string (str): The input string containing characters to encode.
 
     Returns:
-        str: The decoded clear character string.
+        str: The encoded string with special characters replaced by HTML entities.
     """
     if not input_string:
         return ""
