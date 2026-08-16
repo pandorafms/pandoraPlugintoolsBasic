@@ -86,9 +86,12 @@ def init_module(
         if key in module:
             module[key] = value
 
-    # Compatibility alias: if the caller explicitly set 'data', it wins over 'value'.
-    if "data" in default_values:
+    # Compatibility alias: whichever of 'data'/'value' the caller explicitly
+    # set, mirror it onto the other one if that other one was not also set.
+    if "data" in default_values and "value" not in default_values:
         module["value"] = module["data"]
+    elif "value" in default_values and "data" not in default_values:
+        module["data"] = module["value"]
 
     return module
 
