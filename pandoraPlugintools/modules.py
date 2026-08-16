@@ -122,6 +122,11 @@ def print_module(
         if "description" in data:
             data["desc"] = data["description"]
 
+        # Modules built by hand (bypassing init_module()) often only set
+        # 'data', not 'value' -- fall back to 'data' when 'value' is missing.
+        if "value" not in data and "data" in data:
+            data["value"] = data["data"]
+
         module_xml = ("<module>\n"
                       "\t<name><![CDATA[" + str(data["name"]) + "]]></name>\n"
                       "\t<type>" + str(data["type"]) + "</type>\n"
