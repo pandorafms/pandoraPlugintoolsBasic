@@ -46,6 +46,11 @@ The repository includes runnable example scripts under `examples/`.
 - `examples/discovery-info-monitoring/example.py` — `add_disco_info_value` / `set_disco_monitoring_data` / `add_disco_monitoring_data` — build the "info" and "monitoring_data" sections.
 - `examples/discovery-output/example.py` — `disco_output` — print the discovery JSON and exit the process.
 
+## Monitoring API
+
+- `examples/monitoring-build-payload/example.py` — `add_monitoring_item` / `print_monitoring_payload` — build the JSON array accepted by the console API v2 `/monitoring` endpoint.
+- `examples/monitoring-send-payload/example.py` — same payload, then send it to `/monitoring` with the third-party `requests` library.
+
 ## Output
 
 - `examples/output-print-functions/example.py` — `print_stdout` / `print_stderr` / `print_debug` — basic output helpers.
@@ -63,4 +68,5 @@ The repository includes runnable example scripts under `examples/`.
 - `examples/discovery-output/example.py` calls `sys.exit()` (via `disco_output`), so it terminates the process after printing its JSON output — this matches how a real discovery plugin ends.
 - `examples/transfer-transfer-xml/example.py` uses local transfer mode so it runs without external dependencies. Tentacle mode requires a reachable Tentacle server and the `tentacle_client` binary on `PATH`; see the comment in that example for the equivalent call.
 - `examples/threads-run-processes/example.py` requires its worker function to be defined at module level (not a lambda or closure) since `multiprocessing` needs to pickle it.
-- Modules built with `init_module()` (directly, via the `Agent` class, or via `print_agent`) always include both a `data` and a `value` key. When rendered, `print_module` copies `data` over `value`, so set `data` — not `value` — to control the module's reported value. Modules built as plain dicts without a `data` key (as in `examples/module-img-print/example.py`) do not have this override and can use `value` directly.
+- Modules built with `init_module()` (directly, via the `Agent` class, or via `print_agent`) always include both a `data` and a `value` key. Whichever one you pass explicitly is mirrored onto the other, so the same module dict renders correctly as XML (`print_module`/`print_agent`) and works as-is as `module_data` for the monitoring API JSON payload. Modules built as plain dicts without going through `init_module()` (as in `examples/module-img-print/example.py`) do not get this mirroring and should set the key the target format expects directly.
+- `requests` is only used inside `examples/monitoring-send-payload/example.py` and is not a dependency of `pandoraPlugintools` itself. That example is a dry run (it only prints the request it would make) unless the `PANDORA_MONITORING_URL` environment variable is set.
