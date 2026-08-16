@@ -86,6 +86,10 @@ def init_module(
         if key in module:
             module[key] = value
 
+    # Compatibility alias: if the caller explicitly set 'data', it wins over 'value'.
+    if "data" in default_values:
+        module["value"] = module["data"]
+
     return module
 
 ####
@@ -114,9 +118,6 @@ def print_module(
 
         if "description" in data:
             data["desc"] = data["description"]
-
-        if "data" in data:
-            data["value"] = data["data"]
 
         module_xml = ("<module>\n"
                       "\t<name><![CDATA[" + str(data["name"]) + "]]></name>\n"
