@@ -60,7 +60,7 @@ def set_disco_summary(data: dict = {}) -> None:
     """
     global _SUMMARY
 
-    _SUMMARY = {}
+    _SUMMARY = data
 
 
 ####
