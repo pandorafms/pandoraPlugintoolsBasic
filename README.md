@@ -38,6 +38,8 @@ The package exports the following modules:
 Reference documentation:
 [PluginTools Reference Documentation](https://pandorafms.com/guides/public/books/plugintools)
 
+For a full, runnable example per function, see [docs/examples.md](docs/examples.md).
+
 ## Most used functions
 
 The README stays focused on the quick path. For a complete function list and full details, use the reference documentation link above.
