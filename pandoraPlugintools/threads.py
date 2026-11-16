@@ -1,15 +1,69 @@
 import sys
 from queue import Queue
-from threading import Thread
-from multiprocessing import Pool, Manager
+from threading import Thread, Lock as _ThreadLock
+import multiprocessing as _multiprocessing
 
 ####
 # Define multi-processing internal global variables.
 #########################################################################################
 
-_MANAGER = Manager()
-_SHARED_DICT = _MANAGER.dict()
-_SHARED_DICT_LOCK = _MANAGER.Lock()
+def _get_mp_context():
+    """
+    Return the multiprocessing context used by this module.
+
+    Pandora FMS plugins are usually plain scripts executed from top to
+    bottom, without an ``if __name__ == "__main__"`` guard. Python 3.14
+    changed the default start method on Linux to ``forkserver``, which
+    re-imports the main script in every worker process and breaks that
+    pattern. Use ``fork`` on Linux when available to keep the previous
+    behavior, and fall back to the platform default otherwise.
+    """
+    if sys.platform.startswith("linux"):
+        try:
+            return _multiprocessing.get_context("fork")
+        except ValueError:
+            pass
+
+    return _multiprocessing.get_context()
+
+_MP_CONTEXT = _get_mp_context()
+_MANAGER = None
+_SHARED_DICT = None
+_SHARED_DICT_LOCK = None
+_SHARED_DICT_INIT_LOCK = _ThreadLock()
+
+def _get_shared_dict():
+    """
+    Return the shared dictionary and its lock, creating the manager
+    lazily on first use.
+    """
+    global _MANAGER, _SHARED_DICT, _SHARED_DICT_LOCK
+
+    if _SHARED_DICT is not None and _SHARED_DICT_LOCK is not None:
+        return _SHARED_DICT, _SHARED_DICT_LOCK
+
+    with _SHARED_DICT_INIT_LOCK:
+        if _SHARED_DICT is None or _SHARED_DICT_LOCK is None:
+            _MANAGER = _MP_CONTEXT.Manager()
+            _SHARED_DICT = _MANAGER.dict()
+            _SHARED_DICT_LOCK = _MANAGER.Lock()
+
+    return _SHARED_DICT, _SHARED_DICT_LOCK
+
+def _init_process_shared_dict(
+        shared_dict = None,
+        shared_dict_lock = None
+    ):
+    """
+    Internal use only: install the parent shared dictionary proxies in a
+    worker process.
+    """
+    global _SHARED_DICT, _SHARED_DICT_LOCK
+
+    if shared_dict is not None:
+        _SHARED_DICT = shared_dict
+    if shared_dict_lock is not None:
+        _SHARED_DICT_LOCK = shared_dict_lock
 
 ####
 # Internal: Alias for output.print_debug function
@@ -147,11 +201,10 @@ def set_shared_dict_value(
         key (str): The key in the shared dictionary.
         value: The value to be assigned to the key.
     """
-    global _SHARED_DICT
-
     if key is not None:
-        with _SHARED_DICT_LOCK:
-            _SHARED_DICT[key] = value
+        shared_dict, shared_dict_lock = _get_shared_dict()
+        with shared_dict_lock:
+            shared_dict[key] = value
 
 ####
 # Add a given value to a key in the internal shared dict.
@@ -169,14 +222,13 @@ def add_shared_dict_value(
         key (str): The key in the shared dictionary.
         value: The value to be added to the key.
     """
-    global _SHARED_DICT
-
     if key is not None:
-        with _SHARED_DICT_LOCK:
-            if key in _SHARED_DICT:
-                _SHARED_DICT[key] += value
+        shared_dict, shared_dict_lock = _get_shared_dict()
+        with shared_dict_lock:
+            if key in shared_dict:
+                shared_dict[key] += value
             else:
-                set_shared_dict_value(key, value)
+                shared_dict[key] = value
 
 ####
 # Get the value of a key in the internal shared dict.
@@ -195,11 +247,13 @@ def get_shared_dict_value(
     Returns:
         The value associated with the key, or None if the key does not exist.
     """
-    global _SHARED_DICT
+    if key is None:
+        return None
 
-    with _SHARED_DICT_LOCK:
-        if key in _SHARED_DICT and key is not None:
-            return _SHARED_DICT[key]
+    shared_dict, shared_dict_lock = _get_shared_dict()
+    with shared_dict_lock:
+        if key in shared_dict:
+            return shared_dict[key]
         else:
             return None
 
@@ -236,8 +290,16 @@ def run_processes(
     if processes < 1:
         processes = 1
 
+    # Ensure the shared dictionary manager exists before forking, so worker
+    # processes inherit its proxy even when they are the ones writing to it.
+    shared_dict, shared_dict_lock = _get_shared_dict()
+
     # Run processes
-    with Pool(processes) as pool:
+    with _MP_CONTEXT.Pool(
+            processes,
+            initializer=_init_process_shared_dict,
+            initargs=(shared_dict, shared_dict_lock)
+        ) as pool:
         try:
             pool.map(function, items)
             result = True

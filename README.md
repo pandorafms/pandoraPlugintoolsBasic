@@ -4,6 +4,11 @@
 
 It is designed as a drop-in replacement for the most commonly used functionality, with a smaller footprint and simpler deployment.
 
+## Requirements
+
+- Python 3.11 or newer.
+- On Linux, `threads.run_processes` explicitly uses the `fork` start method so plain plugin scripts (without an `if __name__ == "__main__"` guard) keep working on Python 3.14 and later.
+
 ## Install
 
 ```bash
@@ -50,7 +55,7 @@ The README stays focused on the quick path. For a complete function list and ful
 | `agents` | `init_agent`, `print_agent`, `get_os` |
 | `modules` | `init_module`, `print_module`, `init_log_module`, `print_log_module` |
 | `transfer` | `write_xml`, `transfer_xml`, `tentacle_xml` |
-| `threads` | `run_threads`, `run_processes`, `set_shared_dict_value`, `get_shared_dict_value` |
+| `threads` | `run_threads`, `run_processes`, `set_shared_dict_value`, `add_shared_dict_value`, `get_shared_dict_value` |
 | `discovery` | `set_disco_summary`, `add_disco_summary_value`, `add_disco_info_value`, `add_disco_monitoring_data`, `disco_output` |
 | `output` | `print_stdout`, `print_stderr`, `print_debug`, `logger` |
 
