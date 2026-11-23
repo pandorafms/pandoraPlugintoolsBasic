@@ -33,7 +33,9 @@ The package exports the following modules:
 - `modules`: Functions to build Pandora FMS module payloads.
 - `transfer`: File transfer and data sending helpers.
 - `discovery`: Helpers for Pandora FMS discovery plugins.
+- `monitoring`: Helpers to accumulate and emit `/monitoring` API payloads.
 - `output`: Output formatting and return helpers.
+- `post_transforms`: Post-transform block engine for Discovery tasks (regex rules that merge whitelisted module fields before serialization).
 
 Reference documentation:
 [PluginTools Reference Documentation](https://pandorafms.com/guides/public/books/plugintools)
@@ -52,6 +54,8 @@ The README stays focused on the quick path. For a complete function list and ful
 | `transfer` | `write_xml`, `transfer_xml`, `tentacle_xml` |
 | `threads` | `run_threads`, `run_processes`, `set_shared_dict_value`, `get_shared_dict_value` |
 | `discovery` | `set_disco_summary`, `add_disco_summary_value`, `add_disco_info_value`, `add_disco_monitoring_data`, `disco_output` |
+| `monitoring` | `set_monitoring_items`, `add_monitoring_item`, `get_monitoring_items`, `print_monitoring_payload` |
+| `post_transforms` | `parse_transform_blocks`, `apply_post_transforms`, `TransformParseError` |
 | `output` | `print_stdout`, `print_stderr`, `print_debug`, `logger` |
 
 ## Quick example
@@ -95,4 +99,71 @@ ppt.transfer_xml(
     tentacle_port="41121",
 )
 ```
+
+## Post-transform blocks for Discovery tasks
+
+Discovery plugins can let task operators enrich modules without touching plugin
+code. Operators write ordered rule blocks in plain text; the plugin applies
+them over the collected agent/module structure right before serializing it, so
+the same rules work for the native JSON path and the tentacle XML path.
+
+```text
+transform_begin
+transform_name       cpu thresholds
+match_module         .*cpu_percent
+match_extra_data     .*:metric:cpu
+set_min_warning      80
+set_max_critical     0
+set_module_group     Rendimiento
+set_tags             infra:cpu
+transform_end
+```
+
+Semantics:
+
+- `match_module` and `match_extra_data` are regexes (substring match; use
+  `^...$` for full match) AND-ed inside a block; a rule needs at least one.
+- Rules apply in order; for each field the last matching rule wins.
+- `set_<field>` accepts exactly the module fields the Discovery ingestion
+  already supports (thresholds, `str_*`, `tags`, `module_group`,
+  `alert_template`, FF settings, `custom_id`, ...). Unknown fields are errors.
+- `set_tags` holds a comma-separated list (`set_tags infra,ops`), the same
+  convention as the agent's `module_tags`: the whole string travels in one
+  field and the server splits it.
+- `name`, `type`, `data`, `value`, `extra_data`, `timestamp` and `status` are
+  protected: a rule cannot change module identity or the collected value.
+- Threshold ranges are half-open `[min, max)`; `max_warning=0` and
+  `max_critical=0` mean "no upper limit", not the literal zero.
+- Invalid regexes, unknown keys and mistyped values are reported with the
+  block and key that caused them: the tolerant API
+  (`parse_transform_blocks_tolerant`) skips the offending rule and keeps the
+  rest, so one bad rule never throws away the monitoring run; the strict API
+  (`parse_transform_blocks`) raises `TransformParseError` instead.
+
+```python
+import pandoraPlugintools as ppt
+
+rules_text = open("post_transforms.conf").read()
+
+# Tolerant parse: bad rules are skipped and reported; good rules apply.
+rules, errors = ppt.parse_transform_blocks_tolerant(rules_text)
+if errors:
+    ppt.set_disco_error_level(1)
+    for error in errors:
+        ppt.add_disco_info_value("post-transforms: %s\n" % error)
+        ppt.print_stderr("post-transforms: %s\n" % error)
+
+# JSON path: over the accumulated monitoring items.
+items = ppt.get_monitoring_items()
+ppt.apply_post_transforms(items, rules)
+payload = ppt.print_monitoring_payload()
+
+# XML path: over the module list, before print_agent().
+ppt.apply_post_transforms(modules, rules)
+xml_content = ppt.print_agent(agent, modules)
+```
+
+The errors are reported in the discovery JSON (`info` plus a non-zero error
+level) and on stderr, so manual runs show them immediately; the monitoring
+itself is never stopped by a bad rule.
 
