@@ -115,7 +115,7 @@ match_extra_data     .*:metric:cpu
 set_min_warning      80
 set_max_critical     0
 set_module_group     Rendimiento
-set_tags             infra:cpu
+set_tags             critical
 transform_end
 ```
 
